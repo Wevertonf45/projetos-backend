@@ -1,11 +1,16 @@
-import mysql from 'mysql2/promise';
+import pkg from 'pg';
+import dotenv from 'dotenv';
+dotenv.config();
 
-const connection = mysql.createPool({
-    host: 'caboose.proxy.rlwy.net',
-    port: 10394,
-    user: 'root',
-    password: 'nnjfDEpLCaDNsKOXZmcZPrAEkzewixlY',
-    database: 'railway',
+const { Pool } = pkg;
+
+const pool = new Pool({
+    host: process.env.PGHOST,
+    port: process.env.PGPORT,
+    database: process.env.PGDATABASE,
+    user: process.env.PGUSER,
+    password: process.env.PGPASSWORD,
+    ssl: { rejectUnauthorized: false } // necessário para Supabase
 });
 
-export default connection;
+export default pool;

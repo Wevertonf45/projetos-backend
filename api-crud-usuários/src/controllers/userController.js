@@ -4,7 +4,7 @@ dotenv.config()
 
 
 //Importações
-import connection from "../configs/database.js";
+import pool from "../configs/database.js";
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 
@@ -25,8 +25,8 @@ export const createUser = async (req, res) => {
         }
 
         //Verificar se o email já existe
-        const [rows] = await connection.execute('SELECT * FROM users WHERE email = ?', [email])
-        if (rows.length > 0) {
+        const existingEmail = await pool.query('SELECT * FROM users WHERE email = $1', [email])
+        if (existingEmail.rows.length > 0) {
             return res.status(409).json({ message: 'E-mail já cadastrado!' })
         }
 
@@ -34,8 +34,8 @@ export const createUser = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10)
 
         //Inserir novo usuário
-        const user = await connection.execute(
-            'INSERT INTO users (name, email, password) VALUES (?, ?, ?)', [name, email, hashedPassword]
+        const user = await pool.query(
+            'INSERT INTO users (name, email, password) VALUES ($1, $2, $3)', [name, email, hashedPassword]
         )
 
         //Responder
@@ -62,8 +62,8 @@ export const login = async (req, res) => {
         }
 
         //Buscar o usuário pelo email
-        const [rows] = await connection.execute('SELECT * FROM users WHERE email = ?', [email])
-        const user = rows[0]
+        const result = await pool.query('SELECT * FROM users WHERE email = $1', [email])
+        const user = result.rows[0]
 
         //Verificar se o email existe
         if (!user) {
